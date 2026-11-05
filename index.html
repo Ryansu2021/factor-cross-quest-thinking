@@ -119,7 +119,7 @@ td.l{text-align:left;white-space:normal}
 .crossbox{position:relative;width:760px;height:286px;margin:0 auto}
 .crossbox svg{position:absolute;left:0;top:0}
 .crossbox .slot{width:124px;height:88px;font-size:38px}
-.cprod{position:absolute;left:468px;width:290px;height:88px;display:flex;align-items:center;gap:8px;font-size:23px;font-weight:900;white-space:nowrap}
+.cprod{position:absolute;left:462px;width:290px;height:88px;display:flex;align-items:center;gap:6px;font-size:20px;font-weight:900;white-space:nowrap}
 .minislot{position:static!important;width:82px!important;height:64px!important;font-size:27px!important;flex:none}
 .under{display:flex;align-items:center;justify-content:center;gap:9px;font-size:27px;font-weight:900;margin-top:14px;min-height:72px;white-space:nowrap}
 .under .slot{position:static;width:96px;height:68px;font-size:30px;flex:none}
@@ -324,7 +324,9 @@ const Sync = {
     this.queue = this.on() ? store.get(this.key() + ':q', []) : [];
     S.syncState = this.on() ? 'ok' : 'none';
     clearInterval(this.timer);
-    if (this.on()) this.timer = setInterval(() => this.flush(), 5000);
+    if (this.on()) this.timer = setInterval(() => {
+      if (S.screen === 'play' && Date.now() - (this.lastPush || 0) > 30000) this.push(); else this.flush();
+    }, 5000);
   },
   saveQ(){ store.set(this.key() + ':q', this.queue.slice(-300)); },
   attempt(rec){
@@ -340,7 +342,7 @@ const Sync = {
   },
   push(){
     if (!this.on()) return;
-    this.lastSummary = this.summary(); this.flush();
+    this.lastPush = Date.now(); this.lastSummary = this.summary(); this.flush();
   },
   async flush(){
     if (!this.on() || this.busy || (!this.queue.length && !this.lastSummary)) return;
@@ -780,7 +782,7 @@ function vClear(){
 /* ---------- 教師密碼 ---------- */
 function teacherUnlocked(){ try { return sessionStorage.getItem('fcq2:teacherOk') === TEACHER_HASH; } catch (e) { return !!S.teacherOk; } }
 function openTeacher(){
-  if (teacherUnlocked() || S.teacherOk){ S.screen = 'teacher'; vTeacher(); }
+  if (teacherUnlocked() || S.teacherOk) enterTeacher();
   else { S.screen = 'gate'; S.gateErr = ''; vGate(); }
 }
 function vGate(){
@@ -805,7 +807,7 @@ async function checkTeacherPw(){
     if (hex !== TEACHER_HASH){ i.value = ''; i.focus(); err.textContent = '密碼不正確，請再試一次。'; return; }
     S.teacherOk = true;
     try { sessionStorage.setItem('fcq2:teacherOk', TEACHER_HASH); } catch (e) {}
-    S.screen = 'teacher'; vTeacher();
+    enterTeacher();
   } catch (e) { if (err) err.textContent = '這個瀏覽器無法驗證密碼，請改用網址開啟。'; }
 }
 
@@ -817,10 +819,10 @@ function vTeacher(){
   const link = storedDb && validClass(cls) && /^https?:/.test(location.protocol) ? location.origin + location.pathname + '?class=' + encodeURIComponent(cls) : '';
   const monitoring = !!T.timer;
   const setup = !monitoring || T.showCfg;
-  stage.innerHTML = bar('教師看板' + (monitoring ? '｜班級 ' + esc(T.cls) : ''), `<button class="btn alt" data-act="tologin" style="min-height:48px;font-size:18px;padding:2px 14px">回登入頁</button>`, true) + `<div class="teacher">
+  stage.innerHTML = bar('教師看板・思考版' + (monitoring ? '｜班級 ' + esc(T.cls) : ''), `<button class="btn alt" data-act="tologin" style="min-height:48px;font-size:18px;padding:2px 14px">回登入頁</button>`, true) + `<div class="teacher">
     ${setup ? `<div class="trow"><span>資料庫網址</span><input id="tDb" value="${esc(storedDb)}" placeholder="https://xxx-default-rtdb.firebaseio.com"><span>班級</span><input id="tCls" style="flex:0 0 130px" value="${esc(cls)}" placeholder="801"><button class="btn" data-act="tstart">開始監看</button></div>` : ''}
     <div class="mono" id="tLink">${link ? '學生連結：' + esc(link) : '輸入班級代碼並開始監看後，這裡會出現學生連結。'}</div>
-    <div class="trow" style="justify-content:space-between"><span id="tStatus">${esc(T.err || (monitoring ? '每 4 秒更新' : '尚未開始'))}</span><span style="display:flex;gap:8px">
+    <div class="trow" style="justify-content:space-between"><span id="tStatus">${esc(T.err || (monitoring ? '每 4 秒更新' : '尚未開始監看'))}</span><span style="display:flex;gap:8px">
       ${monitoring ? `<button class="btn alt" data-act="tcfg">${T.showCfg ? '收起設定' : '更換班級'}</button>` : ''}<button class="btn alt" data-act="csvSum">匯出總表 CSV</button><button class="btn alt" data-act="csvAtt">匯出作答紀錄 CSV</button><button class="btn alt" data-act="tclear">${T.confirmClear ? '再按一次確認清除' : '清除本班資料'}</button></span></div>
     <div class="kpis" id="tKpi"></div>
     <div class="bars" id="tBars"></div>
@@ -850,7 +852,7 @@ function renderTable(){
   ].map(k => `<div class="kpi"><span>${k[0]}</span><b class="${k[2]}">${k[1]}</b></div>`).join('');
   const bars = document.getElementById('tBars');
   if (bars) bars.innerHTML = top.length ? '<b>迷思排行：</b>' + top.slice(0, 5).map(([k, v]) => esc(MISCON[k] || k) + ' ' + v + ' 次').join('、') : '';
-  if (!rows.length){ el.innerHTML = '<div class="empty">還沒有學生資料</div>'; return; }
+  if (!rows.length){ el.innerHTML = T.timer ? `<div class="empty">班級 ${esc(T.cls)} 還沒有學生資料。<br>請確認學生輸入的班級代碼相同，並使用思考版網址。</div>` : '<div class="empty">尚未開始監看。<br>請輸入班級代碼，再按「開始監看」。</div>'; return; }
   el.innerHTML = '<div class="cards">' + rows.map(r => {
     const a = nn(r.correct), w = nn(r.wrong), c = Math.min(7, nn(r.cleared));
     const ago = Math.max(0, Math.round((now - nn(r.t)) / 1000));
@@ -881,13 +883,23 @@ async function teacherPoll(){
     const st = document.getElementById('tStatus'); if (st) st.textContent = T.err;
   }
 }
+function enterTeacher(){
+  S.screen = 'teacher';
+  const T = S.teacher;
+  const cls = params.get('class') || store.get('fcq2:teacherCls', '');
+  if (!T.timer && S.db && validClass(cls)){
+    T.cls = cls; T.db = S.db; T.err = '';
+    clearInterval(T.timer); T.timer = setInterval(teacherPoll, 4000);
+    vTeacher(); teacherPoll();
+  } else vTeacher();
+}
 function teacherStart(){
   const T = S.teacher;
   const db = validDb(document.getElementById('tDb').value), cls = document.getElementById('tCls').value.trim();
   T.cls = cls;
   if (!db){ T.err = '資料庫網址格式不對，應為 Firebase Realtime Database 網址。'; clearInterval(T.timer); T.timer = 0; vTeacher(); return; }
   if (!validClass(cls)){ T.err = '請輸入班級代碼（英數字）。'; clearInterval(T.timer); T.timer = 0; vTeacher(); return; }
-  S.db = db; T.db = db; T.err = ''; store.set('fcq2:teacherDb', db); T.showCfg = false;
+  S.db = db; T.db = db; T.err = ''; store.set('fcq2:teacherDb', db); store.set('fcq2:teacherCls', cls); T.showCfg = false;
   clearInterval(T.timer); T.timer = setInterval(teacherPoll, 4000);
   vTeacher(); teacherPoll();
 }
@@ -956,6 +968,7 @@ stage.addEventListener('click', e => {
 stage.addEventListener('keydown', e => {
   if (e.key === 'Enter' && S.screen === 'login' && e.target.tagName === 'INPUT') login();
   if (e.key === 'Enter' && S.screen === 'gate' && e.target.id === 'tPw') checkTeacherPw();
+  if (e.key === 'Enter' && S.screen === 'teacher' && (e.target.id === 'tCls' || e.target.id === 'tDb')) teacherStart();
 });
 /* 實體鍵盤也可輸入 */
 document.addEventListener('keydown', e => {
