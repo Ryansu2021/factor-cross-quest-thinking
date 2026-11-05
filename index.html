@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>因式分解闖關王・思考版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--ink:#111111;--paper:#FFFFFF;--sun:#FFD60A;--pink:#E11D74}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--ink);overflow:hidden;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--ink)}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;background:var(--paper);transform-origin:0 0;overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:4px solid var(--pink);outline-offset:2px}
+.btn{min-height:64px;padding:8px 26px;font-size:24px;font-weight:900;background:var(--ink);color:var(--paper);border:3px solid var(--ink)}
+.btn.alt{background:var(--paper);color:var(--ink)}
+.btn.sun{background:var(--sun);color:var(--ink)}
+.btn:active,.tile:active,.opt:active{transform:translate(2px,2px)}
+.bar{height:76px;background:var(--sun);border-bottom:3px solid var(--ink);display:flex;align-items:center;gap:22px;padding:0 24px;font-weight:900;font-size:24px}
+.bar .grow{flex:1}
+.hearts{font-size:30px;color:var(--pink);letter-spacing:2px;-webkit-text-stroke:1px var(--ink)}
+.sync{font-size:15px;font-weight:700;border:2px solid var(--ink);padding:3px 8px;background:var(--paper)}
+.center{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px;text-align:center}
+h1{font-size:68px;font-weight:900;line-height:1.1}
+h2{font-size:42px;font-weight:900}
+.sub{font-size:24px;font-weight:700}
+.panel{border:3px solid var(--ink);padding:24px;background:var(--paper)}
+.field{display:flex;align-items:center;gap:14px;font-size:24px;font-weight:900;margin-bottom:16px;justify-content:flex-end}
+input{font:inherit;font-size:26px;height:62px;width:300px;padding:0 14px;border:3px solid var(--ink);border-radius:0;background:var(--paper);color:var(--ink);user-select:text;-webkit-user-select:text}
+.err{min-height:30px;font-size:20px;font-weight:700}
+.map{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:1160px}
+.lv{height:158px;border:3px solid var(--ink);padding:12px;text-align:left;display:flex;flex-direction:column;gap:6px;background:var(--paper)}
+.lv b{font-size:21px}.lv span{font-size:18px;font-weight:700}.lv i{font-style:normal;font-size:26px;margin-top:auto}
+.lv.open{background:var(--sun)}.lv.done{background:var(--paper)}
+.lv.lock{border-style:dashed;cursor:not-allowed}
+.play{display:flex;height:644px}
+.left{width:790px;padding:18px 24px;border-right:3px solid var(--ink);position:relative}
+.right{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:0}
+#problem{font-size:56px;font-weight:900;text-align:center;line-height:1.15;min-height:72px;white-space:nowrap}
+.tag{font-size:17px;font-weight:900;text-align:center;margin-bottom:2px}
+.prompt{font-size:24px;font-weight:900;line-height:1.35}
+.small{font-size:19px;font-weight:700;line-height:1.45}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{min-height:66px;border:3px solid var(--ink);font-size:23px;font-weight:900;padding:8px 14px;background:var(--paper);text-align:left}
+.opt:hover{background:var(--sun)}
+.cross{position:relative;width:724px;height:300px;margin:12px auto 0}
+.cross svg{position:absolute;left:0;top:0}
+.slot{position:absolute;width:128px;height:96px;border:3px solid var(--ink);background:var(--paper);font-size:42px;font-weight:900;display:flex;align-items:center;justify-content:center;touch-action:none}
+.slot.sel{background:var(--sun);outline:4px solid var(--pink);outline-offset:1px}
+.slot.empty{border-style:dashed}
+.slot.lock{cursor:default}
+.prod{position:absolute;left:468px;width:256px;height:96px;display:flex;align-items:center;font-size:27px;font-weight:900;animation:pop .35s both}
+.prod.b{animation-delay:.3s}
+.sumline{min-height:54px;text-align:center;font-size:27px;font-weight:900;margin-top:6px;animation:pop .35s .55s both}
+.preview{text-align:center;font-size:34px;font-weight:900;margin-top:6px;min-height:50px}
+@keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+.pad{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.pad.h{grid-template-columns:repeat(9,1fr);gap:4px}
+.tile{height:66px;border:3px solid var(--ink);font-size:25px;font-weight:900;background:var(--paper);touch-action:none}
+.pad.h .tile{height:62px;font-size:19px;padding:0}
+.tile.ghost{position:absolute;width:72px;z-index:9;pointer-events:none;background:var(--sun);display:flex;align-items:center;justify-content:center}
+.actions{display:flex;gap:10px;margin-top:auto}
+.actions .btn{flex:1;padding:6px;font-size:22px}
+.fb{border:3px solid var(--ink);padding:12px 14px;font-size:21px;font-weight:700;line-height:1.45}
+.fb.ok{background:var(--sun)}.fb.no{border-color:var(--pink);border-width:5px}
+.fb b{font-weight:900;font-size:24px;display:block;margin-bottom:2px}
+.hintbox{border:3px dashed var(--ink);padding:10px 12px;font-size:19px;font-weight:700;line-height:1.45}
+.eq{display:flex;align-items:center;justify-content:center;gap:10px;font-size:46px;font-weight:900;margin-top:48px;white-space:nowrap}
+.eq .slot{position:static;width:112px;height:92px}
+.table-wrap{height:398px;overflow:auto;border:3px solid var(--ink);touch-action:pan-y}
+table{border-collapse:collapse;width:100%;font-size:18px;font-weight:700}
+th,td{border:1px solid var(--ink);padding:6px 8px;text-align:center;white-space:nowrap}
+th{position:sticky;top:0;background:var(--sun);font-weight:900}
+td.l{text-align:left;white-space:normal}
+.teacher{padding:12px 20px;height:644px;display:flex;flex-direction:column;gap:10px}
+.trow{display:flex;gap:10px;align-items:center;font-size:18px;font-weight:900}
+.trow input{height:48px;font-size:18px;width:auto;flex:1;min-width:0}
+.trow .btn{min-height:48px;font-size:18px;padding:4px 14px;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{border:3px solid var(--ink);background:var(--sun);padding:6px 12px;min-width:0}
+.kpi span{display:block;font-size:16px;font-weight:700}
+.kpi b{display:block;font-size:32px;font-weight:900;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi b.txt{font-size:21px;line-height:1.75}
+.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-content:start}
+.scard{border:3px solid var(--ink);padding:7px 9px;background:var(--paper);min-width:0;font-size:15px;font-weight:700;line-height:1.35}
+.scard.alert{border:5px solid var(--pink);padding:5px 7px}
+.scard.idle{border-style:dashed}
+.scard .top{display:flex;justify-content:space-between;align-items:baseline;gap:4px}
+.scard .no{font-size:30px;font-weight:900;line-height:1.1}
+.scard .rate{font-size:21px;font-weight:900}
+.scard .prog{display:flex;gap:2px;margin:3px 0}
+.scard .prog i{flex:1;height:9px;border:2px solid var(--ink)}
+.scard .prog i.on{background:var(--ink)}
+.scard .one{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board{flex:1;min-height:0;overflow:auto;touch-action:pan-y}
+.empty{border:3px dashed var(--ink);padding:40px;text-align:center;font-size:22px;font-weight:700}
+.bars{display:flex;gap:14px;flex-wrap:wrap;font-size:17px;font-weight:700;min-height:28px}
+.bars b{font-weight:900}
+.mono{font-size:15px;font-weight:700;word-break:break-all;user-select:text;-webkit-user-select:text}
+.play-bar{height:96px;gap:16px}
+.play-bar .lvl{font-size:20px;white-space:nowrap}
+.play-bar #problem{flex:1;font-size:40px;font-weight:900;text-align:center;white-space:nowrap;min-height:0;line-height:1.1}
+.play{display:block;height:624px}
+.zone{height:496px;display:flex}
+.work{flex:1;min-width:0;padding:14px 20px;position:relative}
+.side{width:430px;padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.key{height:68px;border:3px solid var(--ink);font-size:30px;font-weight:900;background:var(--paper);touch-action:manipulation}
+.key:active{transform:translate(2px,2px)}
+.side .row3{display:flex;gap:8px}
+.side .row3 .btn{flex:1;padding:4px;font-size:21px;min-height:68px}
+.guide{height:128px;border-top:3px solid var(--ink);padding:10px 24px;font-size:23px;font-weight:700;line-height:1.38;overflow:hidden}
+.guide.ok{background:var(--sun)}
+.guide.no{border-top:6px solid var(--pink)}
+.guide b{font-weight:900}
+.guide .hintline{font-size:19px;font-weight:700;margin-top:3px}
+.choices{height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.choices .opt{width:640px;text-align:center;font-size:28px;min-height:76px}
+.crossbox{position:relative;width:760px;height:286px;margin:0 auto}
+.crossbox svg{position:absolute;left:0;top:0}
+.crossbox .slot{width:124px;height:88px;font-size:38px}
+.cprod{position:absolute;left:468px;width:290px;height:88px;display:flex;align-items:center;gap:8px;font-size:23px;font-weight:900;white-space:nowrap}
+.minislot{position:static!important;width:82px!important;height:64px!important;font-size:27px!important;flex:none}
+.under{display:flex;align-items:center;justify-content:center;gap:9px;font-size:27px;font-weight:900;margin-top:14px;min-height:72px;white-space:nowrap}
+.under .slot{position:static;width:96px;height:68px;font-size:30px;flex:none}
+.final{height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center}
+.final .txt{font-size:42px;font-weight:900;line-height:1.35}
+.final .btn{min-width:320px}
+.eqline{display:flex;align-items:center;justify-content:center;gap:8px;font-size:38px;font-weight:900;margin-top:64px;white-space:nowrap}
+.eqline .slot{position:static;width:92px;height:80px;font-size:34px;flex:none}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+'use strict';
+/* 後端設定：貼上 Firebase Realtime Database 網址；也可在教師看板輸入後產生學生連結。 */
+const HEARTS = 5;
+const FIREBASE_DB_URL = 'https://cross-method-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+/* 教師密碼：只存雜湊值。要更換時需重新產生這三個值。 */
+const TEACHER_SALT = '69c938da9f68f523e180e94e951a0449';
+const TEACHER_HASH = '99c9738c9e9c236ab3177662909b585a12d1eb8ec819e6486ca624681a2b919b';
+const TEACHER_ITER = 200000;
+
+const MINUS = '−';
+const params = new URLSearchParams(location.search);
+const stage = document.getElementById('stage');
+
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function validDb(u){
+  if (!u) return '';
+  u = String(u).trim().replace(/\/+$/, '');
+  if (/^https:\/\/[\w.-]+\.(firebaseio\.com|firebasedatabase\.app)$/.test(u)) return u;
+  if (/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(u)) return u;
+  return '';
+}
+function validClass(c){ return /^[\w-]{1,20}$/.test(c || ''); }
+function seatKey(n){ return 's' + String(n).padStart(2, '0'); }
+
+/* ---------- 數學工具 ---------- */
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
+const divisors = n => { n = Math.abs(n); const r = []; for (let i = 1; i <= n; i++) if (n % i === 0) r.push(i); return r; };
+const num = n => n < 0 ? MINUS + Math.abs(n) : String(n);
+const termX = n => n === 1 ? 'x' : n === -1 ? MINUS + 'x' : num(n) + 'x';
+const signed = n => n < 0 ? MINUS + ' ' + Math.abs(n) : '+ ' + n;
+function fmtPoly(a, b, c){
+  let s = a === 1 ? 'x²' : a === -1 ? MINUS + 'x²' : num(a) + 'x²';
+  if (b) s += (b < 0 ? ' ' + MINUS + ' ' : ' + ') + (Math.abs(b) === 1 ? '' : Math.abs(b)) + 'x';
+  if (c) s += (c < 0 ? ' ' + MINUS + ' ' : ' + ') + Math.abs(c);
+  return s;
+}
+const fmtFac = (p, q) => '(' + (p === 1 ? '' : p) + 'x ' + signed(q) + ')';
+const signedX = n => (n < 0 ? MINUS : '+') + (Math.abs(n) === 1 ? '' : Math.abs(n)) + 'x';
+const signedN = n => (n < 0 ? MINUS : '+') + Math.abs(n);
+const fmtK = k => k === 1 ? '' : k === -1 ? MINUS : num(k);
+function shuffle(arr){ const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- 題庫 ---------- */
+function mk(p, q, r, s){ return { p, q, r, s, a: p * r, b: p * s + q * r, c: q * s }; }
+const POOL = {};
+(function buildPools(){
+  POOL[1] = []; POOL[2] = []; POOL[3] = []; POOL[4] = []; POOL[5] = [];
+  for (let q = 1; q <= 9; q++) for (let s = q + 1; s <= 9; s++) if (q * s <= 36){ POOL[1].push(mk(1, q, 1, s)); POOL[2].push(mk(1, -q, 1, -s)); }
+  for (let q = 1; q <= 9; q++) for (let s = 1; s <= 9; s++) if (q !== s && q * s <= 36) POOL[3].push(mk(1, q, 1, -s));
+  const R = []; for (let i = -7; i <= 7; i++) if (i) R.push(i);
+  [2, 3, 5, 7].forEach(a => R.forEach(q => R.forEach(s => {
+    if (q === s || Math.abs(q * s) > 24 || gcd(a, q) !== 1) return;
+    const t = mk(a, q, 1, s);
+    if (t.b && gcd(gcd(t.a, t.b), t.c) === 1) POOL[4].push(t);
+  })));
+  [4, 6, 8, 9, 10, 12].forEach(a => divisors(a).forEach(r => {
+    const p = a / r; if (p < r) return;
+    R.forEach(q => R.forEach(s => {
+      if (Math.abs(q * s) > 24 || gcd(p, q) !== 1 || gcd(r, s) !== 1 || (p === r && q === s)) return;
+      const t = mk(p, q, r, s);
+      if (t.b && gcd(gcd(t.a, t.b), t.c) === 1) POOL[5].push(t);
+    }));
+  }));
+})();
+function pred(t){ return t.c < 0 ? 'mix' : t.b > 0 ? 'pp' : 'nn'; }
+function cross(t, level, k, needCommon){
+  return { kind: 'cross', a: t.a, b: t.b, c: t.c, k: k || 1, needCommon: !!needCommon, oa: t.a * (k || 1), ob: t.b * (k || 1), oc: t.c * (k || 1), level, answerSign: pred(t) };
+}
+function pickFrom(pool, n){
+  const seen = new Set(), out = [];
+  for (const t of shuffle(pool)){ const key = [t.a, t.b, t.c].join(); if (!seen.has(key)){ seen.add(key); out.push(t); if (out.length === n) break; } }
+  return out;
+}
+function hintQ(ra, q, r, bv, swap){
+  const A = ra * r, B = ra * bv + q * r, C = q * bv;
+  return { kind: 'hint', A, B, C, ra, q, r, bv, swap: !!swap, answerSign: bv > 0 ? 'pos' : 'neg' };
+}
+function hintPool(){
+  const out = [];
+  for (let ra = 2; ra <= 7; ra++) for (let r = 2; r <= 5; r++) {
+    for (let q = -7; q <= 7; q++) for (let b = -7; b <= 7; b++) {
+      if (!q || !b || Math.abs(q * b) > 30 || gcd(ra, q) !== 1 || gcd(r, b) !== 1) continue;
+      const B = ra * b + q * r; if (!B) continue;
+      out.push([ra, q, r, b]);
+    }
+  }
+  return out;
+}
+function genLevel(level, attempt){
+  if (level <= 5) return pickFrom(POOL[level], 4).map(t => cross(t, level));
+  if (level === 6){
+    const qs = shuffle(hintPool()).slice(0, attempt ? 4 : 3).map((x, i) => hintQ(x[0], x[1], x[2], x[3], i % 2 === 0));
+    if (!attempt) qs.unshift(hintQ(3, -5, 2, 1, false));
+    return qs;
+  }
+  const a1 = POOL[1].concat(POOL[2], POOL[3]);
+  const first = attempt ? cross(pickFrom(a1, 1)[0], 7, shuffle([2, 3])[0], true) : cross(mk(1, 1, 1, 2), 7, 2, true);
+  const neg = attempt ? cross(pickFrom(a1, 1)[0], 7, shuffle([-2, -3])[0], true) : cross(mk(1, 1, 1, 2), 7, -2, true);
+  const m1 = cross(pickFrom(POOL[2].concat(POOL[3]), 1)[0], 7, -1, true);
+  const hard = cross(pickFrom(POOL[5], 1)[0], 7, 1, true);
+  const easy = cross(pickFrom(POOL[4], 1)[0], 7, 1, true);
+  const x = shuffle(hintPool())[0];
+  return shuffle([first, neg, m1, hard, easy, hintQ(x[0], x[1], x[2], x[3], true)]);
+}
+
+/* ---------- 關卡設定 ---------- */
+const LEVELS = [
+  null,
+  { name: '第 1 關', title: '正數熱身', goal: '把算式拆成兩個括號相乘，數字都是正的。', ex: 'x² + 5x + 6' },
+  { name: '第 2 關', title: '負號登場', goal: 'x 的係數變成負的了，常數項還是正的。', ex: 'x² ' + MINUS + ' 5x + 6' },
+  { name: '第 3 關', title: '一正一負', goal: '常數項變成負的，兩個數要怎麼配？', ex: 'x² + x ' + MINUS + ' 6' },
+  { name: '第 4 關', title: '首項不是 1', goal: 'x² 的係數是質數，首項也要拆開。', ex: '2x² + 7x + 3' },
+  { name: '第 5 關', title: '多種拆法', goal: 'x² 的係數是合數，拆法不只一種。', ex: '6x² + 7x + 2' },
+  { name: '第 6 關', title: '會考挑戰', goal: '算式已給一部分，求出 a 與 b。', ex: '6x² ' + MINUS + ' 7x ' + MINUS + ' 5 = (ax ' + MINUS + ' 5)(2x + b)' },
+  { name: '魔王關', title: '限時大魔王', goal: '混合題、限時 8 分鐘。先判斷有沒有公因式，正負都要留意。', ex: MINUS + '2x² ' + MINUS + ' 6x ' + MINUS + ' 4' }
+];
+const REFLECT = {
+  1: { q: '這一關，怎樣的兩個數才對？', opts: ['相乘等於常數項，相加等於 x 的係數', '相加等於常數項，相乘等於 x 的係數', '只要相乘等於常數項'], right: 0,
+       after: '你剛才用的方法，叫做「十字交乘法」：把 x² 和常數項分別拆開，交叉相乘再相加，檢查 x 的係數。' },
+  3: { q: '常數項是負數時，兩個數會怎麼樣？', opts: ['兩個都是負數', '一正一負，絕對值較大的數一定是正數', '一正一負，絕對值較大的數與 x 的係數同號'], right: 2,
+       after: '沒錯！先看常數項決定同號或異號，再由 x 的係數決定誰正誰負。' },
+  4: { q: 'x² 的係數不是 1 時，要檢查什麼？', opts: ['兩個常數相加，是否等於 x 的係數', '交叉相乘後相加，是否等於 x 的係數', '兩個常數相乘，是否等於 x 的係數'], right: 1,
+       after: '沒錯！首項不是 1 時，要先乘上首項的係數再相加，所以位置很重要。' }
+};
+const MISCON = {
+  onlyProduct: '只看乘積、沒看和',
+  posAssume: '常數項為正就以為都是正數',
+  signFlip: '一次項正負相反',
+  swap: '交叉位置放錯',
+  a1Method: '首項不是 1 仍只找和',
+  first: '首項係數乘積錯',
+  constSign: '常數項符號錯',
+  constVal: '常數項乘積錯',
+  sumOther: '交叉相乘的和不對',
+  commonMissed: '公因式沒提完',
+  commonSign: '提公因式的正負錯',
+  commonNone: '誤判有無公因式',
+  crossCalc: '交叉相乘算錯',
+  sumCalc: '相加算錯',
+  factorWrite: '寫成括號時出錯'
+};
+
+/* ---------- 回饋診斷：只提問、不給答案 ---------- */
+const par = n => n < 0 ? '(' + num(n) + ')' : String(n);
+function diagnose(q, p, qq, r, s){
+  const pr = p * r, qs = qq * s, sum = p * s + qq * r;
+  if (pr !== q.a) return { ok: false, type: 'first', msg: par(p) + ' × ' + par(r) + ' = ' + num(pr) + '，但 x² 的係數是 ' + num(q.a) + '。哪兩個正整數相乘才會是 ' + q.a + '？' };
+  if (qs !== q.c){
+    if (qs === -q.c) return { ok: false, type: 'constSign', msg: par(qq) + ' × ' + par(s) + ' = ' + num(qs) + '，題目的常數項是 ' + num(q.c) + '，正負號不一樣。兩個數要同號還是異號，相乘才會是' + (q.c > 0 ? '正' : '負') + '的？' };
+    return { ok: false, type: 'constVal', msg: par(qq) + ' × ' + par(s) + ' = ' + num(qs) + '，不等於 ' + num(q.c) + '。哪兩個數相乘才會是 ' + num(q.c) + '？' };
+  }
+  if (sum === q.b) return { ok: true };
+  if (q.a !== 1 && p * qq + s * r === q.b) return { ok: false, type: 'swap', msg: '乘積都對，但合起來是 ' + termX(sum) + '，題目要 ' + termX(q.b) + '。同樣這些數字，放的位置不同，交叉相乘的結果會改變嗎？' };
+  if (q.a !== 1 && qq + s === q.b) return { ok: false, type: 'a1Method', msg: '兩個常數直接相加確實是 ' + num(q.b) + '，但交叉線上還要乘上首項的係數，實際是 ' + termX(sum) + '。首項不是 1 時，要怎麼拆才會湊出 ' + termX(q.b) + '？' };
+  if (sum === -q.b){
+    if (q.c > 0 && qq > 0 && s > 0) return { ok: false, type: 'posAssume', msg: '目前兩個正數合起來是 ' + signedX(sum) + '，但題目要 ' + signedX(q.b) + '。想一想，哪兩個數相乘還是 ' + signedN(q.c) + '，但加起來會變負的？' };
+    return { ok: false, type: 'signFlip', msg: '大小對了，但你得到 ' + signedX(sum) + '，題目要 ' + signedX(q.b) + '。一正一負相加時，結果的正負由誰決定？' };
+  }
+  if (q.a === 1) return { ok: false, type: 'onlyProduct', msg: '乘積對了，但相加是 ' + num(sum) + '，題目要 ' + num(q.b) + '。相乘還是 ' + num(q.c) + ' 的數對還有哪些？哪一組相加才是 ' + num(q.b) + '？' };
+  return { ok: false, type: 'sumOther', msg: '乘積都對，但合起來是 ' + termX(sum) + '，比題目的 ' + termX(q.b) + (sum > q.b ? '大' : '小') + '。還有哪一種拆法或擺法可以更接近？' };
+}
+function diagnoseHint(q, which, v){
+  if (which === 'a'){
+    const pr = v * q.r;
+    if (pr === q.A) return { ok: true };
+    return { ok: false, type: 'first', msg: par(v) + ' × ' + q.r + ' = ' + num(pr) + '，但 x² 的係數是 ' + q.A + '。a 要是多少，乘上 ' + q.r + ' 才會是 ' + q.A + '？' };
+  }
+  const qs = q.q * v;
+  if (qs === q.C) return { ok: true };
+  if (qs === -q.C) return { ok: false, type: 'constSign', msg: par(q.q) + ' × ' + par(v) + ' = ' + num(qs) + '，題目的常數項是 ' + num(q.C) + '，正負號不一樣。b 應該是正數還是負數？' };
+  return { ok: false, type: 'constVal', msg: par(q.q) + ' × ' + par(v) + ' = ' + num(qs) + '，不等於 ' + num(q.C) + '。b 要是多少才對？' };
+}
+
+/* ---------- 狀態與同步 ---------- */
+const S = { screen: 'login', cls: '', seat: 0, db: validDb(params.get('db')) || validDb(FIREBASE_DB_URL), demo: params.get('demo') === '1',
+  prog: { stars: {}, cleared: 0, correct: 0, wrong: 0, hints: 0, miscon: {}, attempts: {} }, level: 0, qs: [], qi: 0, hearts: HEARTS, mistakes: 0, hintsUsed: 0, levelStarted: 0,
+  cur: null, step: '', slots: {}, sel: '', fb: null, predicted: '', showHint: false, deadline: 0, timerId: 0, syncState: 'none', reflectFb: '', teacher: { rows: {}, err: '', timer: 0, confirmClear: false } };
+
+const Sync = {
+  queue: [], timer: 0, busy: false, lastSummary: null,
+  key(){ return 'fcq2:' + (S.cls || 'solo') + ':' + S.seat; },
+  on(){ return !!(S.db && validClass(S.cls)); },
+  init(){
+    this.queue = this.on() ? store.get(this.key() + ':q', []) : [];
+    S.syncState = this.on() ? 'ok' : 'none';
+    clearInterval(this.timer);
+    if (this.on()) this.timer = setInterval(() => this.flush(), 5000);
+  },
+  saveQ(){ store.set(this.key() + ':q', this.queue.slice(-300)); },
+  attempt(rec){
+    if (!this.on()) return;
+    this.queue.push(Object.assign({ seat: S.seat, t: Date.now() }, rec));
+    this.saveQ(); this.flush();
+  },
+  summary(){
+    const p = S.prog, st = {}; let total = 0;
+    for (let i = 1; i <= 7; i++){ const v = p.stars['L' + i] || 0; st['L' + i] = v; total += v; }
+    const q = S.cur ? (S.cur.kind === 'hint' ? hintText(S.cur) : fmtPoly(S.cur.oa, S.cur.ob, S.cur.oc)) : '';
+    return { seat: S.seat, level: S.level || 0, cleared: p.cleared, totalStars: total, stars: st, correct: p.correct, wrong: p.wrong, hints: p.hints, miscon: p.miscon, q, screen: S.screen, t: Date.now() };
+  },
+  push(){
+    if (!this.on()) return;
+    this.lastSummary = this.summary(); this.flush();
+  },
+  async flush(){
+    if (!this.on() || this.busy || (!this.queue.length && !this.lastSummary)) return;
+    this.busy = true;
+    const base = S.db + '/factorGame/' + encodeURIComponent('v2-' + S.cls);
+    const sk = seatKey(S.seat);
+    try {
+      while (this.queue.length){
+        const r = await fetch(base + '/attempts/' + sk + '.json', { method: 'POST', body: JSON.stringify(this.queue[0]) });
+        if (!r.ok) throw new Error('post ' + r.status);
+        this.queue.shift(); this.saveQ();
+      }
+      if (this.lastSummary){
+        const body = this.lastSummary; this.lastSummary = null;
+        const r = await fetch(base + '/students/' + sk + '.json', { method: 'PUT', body: JSON.stringify(body) });
+        if (!r.ok){ this.lastSummary = this.lastSummary || body; throw new Error('put ' + r.status); }
+      }
+      this.setState('ok');
+    } catch (e) {
+      if (!this.lastSummary) this.lastSummary = this.summary();
+      this.setState('wait');
+    }
+    this.busy = false;
+  },
+  setState(v){ S.syncState = v; const el = document.getElementById('sync'); if (el) el.textContent = syncText(); }
+};
+function syncText(){ return S.syncState === 'ok' ? '已連線' : S.syncState === 'wait' ? '離線，資料暫存中' : '僅存本機'; }
+function saveProg(){ store.set('fcq2:' + (S.cls || 'solo') + ':' + S.seat + ':prog', S.prog); }
+function hintText(q){
+  const ax = '(ax ' + signed(q.q) + ')', bx = '(' + q.r + 'x + b)';
+  return fmtPoly(q.A, q.B, q.C) + ' = ' + (q.swap ? bx + ax : ax + bx);
+}
+
+/* ---------- 流程 ---------- */
+function starsFor(m){ return m === 0 ? 3 : m <= 2 ? 2 : 1; }
+function go(screen){ S.screen = screen; render(); }
+function login(){
+  const cls = document.getElementById('cls').value.trim();
+  const seat = parseInt(document.getElementById('seat').value, 10);
+  const err = document.getElementById('loginErr');
+  if (S.db && !validClass(cls)){ err.textContent = '請輸入班級代碼（英數字，例如 801）。'; return; }
+  if (cls && !validClass(cls)){ err.textContent = '班級代碼只能用英數字。'; return; }
+  if (!(seat >= 1 && seat <= 60)){ err.textContent = '請輸入 1 到 60 的座號。'; return; }
+  S.cls = cls; S.seat = seat;
+  S.prog = Object.assign({ stars: {}, cleared: 0, correct: 0, wrong: 0, hints: 0, miscon: {}, attempts: {} }, store.get('fcq2:' + (cls || 'solo') + ':' + seat + ':prog', {}));
+  Sync.init(); Sync.push();
+  go('map');
+}
+function unlocked(l){ return S.demo || l <= S.prog.cleared + 1; }
+function startLevel(l){
+  if (!unlocked(l)) return;
+  S.level = l;
+  const a = S.prog.attempts['L' + l] || 0;
+  S.prog.attempts['L' + l] = a + 1;
+  S.qs = genLevel(l, a); S.qi = 0; S.hearts = HEARTS; S.mistakes = 0; S.hintsUsed = 0;
+  S.deadline = 0;
+  saveProg(); go('intro');
+}
+function beginPlay(){
+  if (S.level === 7){ S.deadline = Date.now() + 480000; }
+  loadQ(); startTimer();
+}
+function loadQ(){
+  S.cur = S.qs[S.qi]; S.fb = null; S.predicted = ''; S.showHint = false; S.slots = {}; S.sel = '';
+  if (S.cur.kind === 'cross' && S.cur.needCommon) S.step = 'common';
+  else S.step = 'predict';
+  S.screen = 'play'; Sync.push(); render();
+}
+function startTimer(){
+  clearInterval(S.timerId);
+  if (!S.deadline) return;
+  S.timerId = setInterval(() => {
+    const left = Math.max(0, S.deadline - Date.now());
+    const el = document.getElementById('timer');
+    if (el) el.textContent = fmtTime(left);
+    if (left <= 0 && S.screen === 'play'){ clearInterval(S.timerId); S.failReason = '時間到了！'; go('fail'); Sync.push(); }
+  }, 300);
+}
+function fmtTime(ms){ const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function mistake(type, rec){
+  S.hearts--; S.mistakes++; S.prog.wrong++;
+  S.prog.miscon[type] = (S.prog.miscon[type] || 0) + 1;
+  Sync.attempt(Object.assign({ level: S.level, ok: false, type }, rec));
+  saveProg(); Sync.push();
+  if (S.hearts <= 0){ clearInterval(S.timerId); S.failReason = '愛心用完了！'; setTimeout(() => { if (S.screen === 'play' && S.hearts <= 0) go('fail'); }, 3500); }
+}
+function slip(type, msg, ans){
+  S.mistakes++; S.prog.wrong++;
+  S.prog.miscon[type] = (S.prog.miscon[type] || 0) + 1;
+  Sync.attempt({ level: S.level, kind: S.step, ok: false, type, q: curText(), ans: String(ans) });
+  saveProg(); Sync.push();
+  S.fb = { ok: false, title: '✗ 再算一次', msg, soft: true };
+  render();
+}
+function passStep(ans){
+  S.prog.correct++;
+  Sync.attempt({ level: S.level, kind: S.step, ok: true, q: curText(), ans: String(ans), hint: S.showHint ? 1 : 0 });
+  saveProg(); Sync.push();
+}
+function setStep(step){
+  S.step = step; S.fb = null;
+  const ids = activeIds();
+  S.sel = ids.find(id => S.slots[id] === undefined) || ids[0] || '';
+  render();
+}
+function chooseCommon(v){
+  const q = S.cur, g = gcd(gcd(q.oa, q.ob), q.oc), right = q.k;
+  const text = fmtPoly(q.oa, q.ob, q.oc);
+  if (v === right){
+    passStep(v);
+    S.step = 'predict'; S.fb = { ok: true, title: '✓ 判斷正確', msg: right === 1 ? '這題沒有要提的公因式，直接分解。' : text + ' = ' + fmtK(right) + '(' + fmtPoly(q.a, q.b, q.c) + ')' };
+    render(); return;
+  }
+  let type, msg;
+  if (right === 1){ type = 'commonNone'; msg = v === -1 ? '這題 x² 的係數已經是正的，真的需要提出 ' + MINUS + '1 嗎？' : '這三項有大於 1 的公因數嗎？再看一次。'; }
+  else if (v === 1){ type = 'commonNone'; msg = right < 0 ? 'x² 的係數是負的，要讓括號裡的首項變成正的，可以怎麼做？' : '這三項都能被同一個數整除嗎？是哪個數？'; }
+  else if (Math.sign(v) !== Math.sign(right)){ type = 'commonSign'; msg = '提出 ' + num(v) + ' 後，括號內 x² 的係數會是正還是負？怎樣才比較好分解？'; }
+  else { type = 'commonMissed'; msg = '提出 ' + num(v) + ' 後，括號內的三項還有公因數嗎？'; }
+  S.fb = { ok: false, title: '✗ 再想想', msg };
+  mistake(type, { kind: 'common', q: text, ans: String(v) });
+  render();
+}
+function choosePredict(v){
+  S.predicted = v;
+  Sync.attempt({ level: S.level, kind: 'predict', ok: v === S.cur.answerSign, q: curText(), ans: v });
+  S.slots = {};
+  setStep(S.cur.kind === 'hint' ? 'hA' : 'direct');
+}
+function curText(){ const q = S.cur; return q.kind === 'hint' ? hintText(q) : fmtPoly(q.oa, q.ob, q.oc); }
+function activeIds(){
+  const q = S.cur; if (!q) return [];
+  switch (S.step){
+    case 'direct': return q.a === 1 ? ['q', 's'] : ['p', 'q', 'r', 's'];
+    case 'cross': return ['c1', 'c2'];
+    case 'sum': case 'hsum': return ['sum'];
+    case 'factor': return q.a === 1 ? ['f1q', 'f2q'] : ['f1p', 'f1q', 'f2p', 'f2q'];
+    case 'hA': return ['a'];
+    case 'hB': return ['b'];
+    case 'hab': return ['ab'];
+  }
+  return [];
+}
+function val(id){ const v = S.slots[id]; return (v === undefined || v === '' || v === '-') ? NaN : parseInt(v, 10); }
+function pressKey(k){
+  const id = S.sel;
+  if (S.hearts <= 0 || !id || !activeIds().includes(id)) return;
+  let c = S.slots[id] || '';
+  if (k === 'back') c = c.slice(0, -1);
+  else if (k === 'neg') c = c[0] === '-' ? c.slice(1) : '-' + c;
+  else if (c.replace('-', '').length < 3) c += k;
+  if (c === '') delete S.slots[id]; else S.slots[id] = c;
+  render();
+}
+function nextSlot(){
+  const ids = activeIds(); if (!ids.length) return;
+  S.sel = ids[(ids.indexOf(S.sel) + 1) % ids.length];
+  render();
+}
+function pqrs(){ const q = S.cur; return q.a === 1 ? { p: 1, r: 1, q: val('q'), s: val('s') } : { p: val('p'), r: val('r'), q: val('q'), s: val('s') }; }
+function confirmStep(){
+  if (S.hearts <= 0) return;
+  const q = S.cur, ids = activeIds();
+  if (ids.some(id => isNaN(val(id)))){ S.fb = { ok: false, soft: true, title: '還有空格', msg: '把格子都填好再按確認。' }; render(); return; }
+  if (q.kind === 'hint') return confirmHint();
+  const v = pqrs(), real = v.p * v.s + v.q * v.r;
+  if (S.step === 'direct'){
+    if (v.p <= 0 || v.r <= 0){ S.fb = { ok: false, soft: true, title: '先用正數拆首項', msg: 'x² 的係數 ' + q.a + ' 可以拆成哪兩個正整數？' }; render(); return; }
+    const ans = v.p + ',' + v.q + ',' + v.r + ',' + v.s;
+    if (v.p * v.r !== q.a || v.q * v.s !== q.c){
+      const d = diagnose(q, v.p, v.q, v.r, v.s);
+      S.fb = { ok: false, title: '✗ 再想想', msg: d.msg };
+      mistake(d.type, { kind: 'direct', q: curText(), ans });
+      render(); return;
+    }
+    passStep(ans);
+    setStep(q.a === 1 ? 'sum' : 'cross');
+    return;
+  }
+  if (S.step === 'cross'){
+    if (val('c1') !== v.r * v.q) return slip('crossCalc', '左下 × 右上：' + par(v.r) + ' × ' + par(v.q) + ' 是多少？', val('c1'));
+    if (val('c2') !== v.p * v.s) return slip('crossCalc', '左上 × 右下：' + par(v.p) + ' × ' + par(v.s) + ' 是多少？', val('c2'));
+    passStep(val('c1') + ',' + val('c2'));
+    setStep('sum');
+    return;
+  }
+  if (S.step === 'sum'){
+    if (val('sum') !== real) return slip('sumCalc', q.a === 1 ? par(v.q) + ' + ' + par(v.s) + ' 是多少？' : par(v.r * v.q) + ' + ' + par(v.p * v.s) + ' 是多少？', val('sum'));
+    passStep(val('sum'));
+    if (real === q.b){ setStep('factor'); return; }
+    const d = diagnose(q, v.p, v.q, v.r, v.s);
+    const fb = { ok: false, title: '✗ 還差一點', msg: d.msg };
+    mistake(d.type, { kind: 'cross', q: curText(), ans: fmtFac(v.p, v.q) + fmtFac(v.r, v.s) });
+    delete S.slots.c1; delete S.slots.c2; delete S.slots.sum;
+    setStep('direct'); S.fb = fb; render();
+    return;
+  }
+  if (S.step === 'factor'){
+    const a = q.a === 1 ? 1 : val('f1p'), b = val('f1q'), c = q.a === 1 ? 1 : val('f2p'), d = val('f2q');
+    if (a * c === q.a && b * d === q.c && a * d + b * c === q.b && a > 0 && c > 0){
+      S.final = [a, b, c, d];
+      passStep(fmtFac(a, b) + fmtFac(c, d));
+      S.step = 'done'; S.fb = { ok: true, title: '✓ 完全正確！', msg: '' }; render();
+      return;
+    }
+    return slip('factorWrite', '十字圖的每一橫排就是一個括號。第一排的左格和右格，寫成括號會是什麼樣子？第二排呢？', fmtFac(a, b) + fmtFac(c, d));
+  }
+}
+function confirmHint(){
+  const q = S.cur;
+  if (S.step === 'hA' || S.step === 'hB'){
+    const which = S.step === 'hA' ? 'a' : 'b', v = val(which), d = diagnoseHint(q, which, v);
+    if (!d.ok){
+      S.fb = { ok: false, title: '✗ 再想想', msg: d.msg };
+      mistake(d.type, { kind: 'hint', q: curText(), ans: which + '=' + v });
+      render(); return;
+    }
+    passStep(which + '=' + v);
+    setStep(which === 'a' ? 'hB' : 'hsum');
+    return;
+  }
+  const a = val('a'), b = val('b');
+  if (S.step === 'hsum'){
+    if (val('sum') !== a * b + q.q * q.r) return slip('sumCalc', '外項 ' + par(a) + ' × ' + par(b) + '，內項 ' + par(q.q) + ' × ' + q.r + '。兩個結果相加是多少？', val('sum'));
+    passStep(val('sum'));
+    setStep('hab');
+    return;
+  }
+  if (S.step === 'hab'){
+    if (val('ab') !== a + b) return slip('sumCalc', par(a) + ' + ' + par(b) + ' 是多少？', val('ab'));
+    passStep(val('ab'));
+    S.step = 'done'; S.fb = { ok: true, title: '✓ 完全正確！', msg: '' }; render();
+  }
+}
+function nextQ(){
+  S.qi++;
+  if (S.qi >= S.qs.length){ finishLevel(); return; }
+  loadQ();
+}
+function finishLevel(){
+  clearInterval(S.timerId);
+  const st = starsFor(S.mistakes + S.hintsUsed);
+  S.lastStars = st;
+  const k = 'L' + S.level;
+  S.prog.stars[k] = Math.max(S.prog.stars[k] || 0, st);
+  if (S.level > S.prog.cleared) S.prog.cleared = S.level;
+  S.cur = null; saveProg();
+  Sync.attempt({ level: S.level, kind: 'clear', ok: true, stars: st });
+  Sync.push();
+  S.reflectFb = '';
+  go(REFLECT[S.level] ? 'reflect' : 'clear');
+}
+function chooseReflect(i){
+  const r = REFLECT[S.level];
+  const ok = i === r.right;
+  Sync.attempt({ level: S.level, kind: 'reflect', ok, ans: r.opts[i] });
+  if (ok){ S.reflectFb = ''; S.reflectAfter = r.after; go('clear'); }
+  else { S.reflectFb = '再回想剛才的驗算過程，再選一次。'; render(); }
+}
+function useHint(){
+  if (S.showHint || !['direct', 'hA', 'hB'].includes(S.step)) return;
+  S.showHint = true; S.hintsUsed++; S.prog.hints++;
+  saveProg(); Sync.push(); render();
+}
+function hintBody(){
+  const q = S.cur;
+  if (q.kind === 'hint') return S.step === 'hA' ? 'a × ' + q.r + ' = ' + q.A + '，可以用除法想一想。' : num(q.q) + ' × b = ' + num(q.C) + '，可以用除法想一想，也要留意正負。';
+  const pairs = n => { const r = []; const m = Math.abs(n); for (let i = 1; i * i <= m; i++) if (m % i === 0) r.push(i + '×' + (m / i)); return r.join('、'); };
+  if (q.a === 1) return '先不管正負，乘積是 ' + Math.abs(q.c) + ' 的數對有：' + pairs(q.c) + '。';
+  return '首項 ' + q.a + ' 可拆成：' + pairs(q.a) + '。常數項 ' + Math.abs(q.c) + ' 可拆成：' + pairs(q.c) + '（先不管正負）。';
+}
+
+/* ---------- 畫面 ---------- */
+function render(){ ({ login: vLogin, map: vMap, intro: vIntro, play: vPlay, fail: vFail, reflect: vReflect, clear: vClear, teacher: vTeacher, gate: vGate })[S.screen](); }
+function vLogin(){
+  const hasDb = !!S.db;
+  stage.innerHTML = `<div class="center" style="gap:12px;padding:16px 32px">
+    <h1>因式分解闖關王・思考版</h1>
+    <div class="sub">七道關卡，每關五顆愛心。你能打倒魔王嗎？</div>
+    <div class="panel">
+      <div class="field">班級代碼<input id="cls" autocomplete="off" maxlength="20" placeholder="${hasDb ? '例如 801' : '可不填'}" value="${esc(params.get('class') || '')}"></div>
+      <div class="field">座號<input id="seat" type="number" inputmode="numeric" min="1" max="60" placeholder="例如 12"></div>
+      <div class="err" id="loginErr" role="alert"></div>
+      <button class="btn" data-act="login" style="width:100%">開始闖關</button>
+    </div>
+    <div class="sub" style="font-size:18px">${hasDb ? '進度會即時傳給老師，只傳座號，不傳姓名。' : '目前未連接後端，進度只存在這台裝置。'}</div>
+    <button class="btn alt" data-act="teacher" style="min-height:48px;font-size:18px;padding:4px 16px">教師看板</button>
+    <div class="sub" style="font-size:16px" id="byline">蘇恭弘。數學王子。台南市忠孝國中製作</div>
+  </div>`;
+}
+function bar(left, extra, noSync){
+  return `<div class="bar"><span>${left}</span><span class="grow"></span>${extra || ''}${noSync ? '' : `<span class="sync" id="sync">${syncText()}</span>`}</div>`;
+}
+function vMap(){
+  let cells = '';
+  for (let i = 1; i <= 7; i++){
+    const l = LEVELS[i], st = S.prog.stars['L' + i] || 0, open = unlocked(i);
+    const showTitle = open;
+    cells += `<button class="lv ${!open ? 'lock' : st ? 'done' : 'open'}" data-act="level" data-v="${i}" ${open ? '' : 'aria-disabled="true"'}>
+      <b>${l.name}</b><span>${showTitle ? l.title : '尚未解鎖'}</span><i>${st ? '★'.repeat(st) + '☆'.repeat(3 - st) : open ? '開始 ▶' : '🔒'}</i></button>`;
+  }
+  stage.innerHTML = bar('座號 ' + S.seat + (S.cls ? '｜' + esc(S.cls) : ''), '<button class="btn alt" data-act="logout" style="min-height:48px;font-size:18px;padding:2px 14px">換人</button>') +
+    `<div class="center" style="height:644px"><h2>選擇關卡</h2><div class="map">${cells}</div></div>`;
+}
+function vIntro(){
+  const l = LEVELS[S.level];
+  stage.innerHTML = bar(l.name) + `<div class="center" style="height:644px">
+    <h1>${l.title}</h1><div class="sub">${l.goal}</div>
+    <div class="panel" style="font-size:38px;font-weight:900">${l.ex}</div>
+    <div class="sub">步驟：先預測 → 自己拆數字 → 自己算 → 寫成括號${S.level === 7 ? '（計時從按下開始）' : ''}</div>
+    <button class="btn sun" data-act="begin" style="min-width:300px">開始</button>
+  </div>`;
+}
+function probText(){
+  const q = S.cur;
+  if (q.kind === 'hint') return fmtPoly(q.A, q.B, q.C);
+  return (S.step === 'common' || q.k === 1) ? fmtPoly(q.oa, q.ob, q.oc) : fmtK(q.k) + '(' + fmtPoly(q.a, q.b, q.c) + ')';
+}
+function hud(){
+  const h = Math.max(0, S.hearts);
+  const hearts = '♥'.repeat(h) + '<span style="opacity:.25">' + '♥'.repeat(HEARTS - h) + '</span>';
+  const t = S.deadline ? `<span aria-label="剩餘時間" style="white-space:nowrap">⏱ <span id="timer">${fmtTime(Math.max(0, S.deadline - Date.now()))}</span></span>` : '';
+  return `<div class="bar play-bar"><span class="lvl">${LEVELS[S.level].name}<br>第 ${S.qi + 1} / ${S.qs.length} 題</span><div id="problem">${probText()}</div>${t}<span class="hearts" aria-label="剩 ${h} 顆愛心">${hearts}</span><button class="btn alt" data-act="leave" style="min-height:48px;font-size:18px;padding:2px 12px;white-space:nowrap">離開</button><span class="sync" id="sync" style="white-space:nowrap">${syncText()}</span></div>`;
+}
+function dispV(id){ const v = S.slots[id]; return v === undefined ? '' : v === '-' ? MINUS : num(parseInt(v, 10)); }
+function slotEl(id, content, cls, style){
+  const on = activeIds().includes(id);
+  return `<button class="slot ${cls || ''} ${on && S.slots[id] === undefined ? 'empty' : ''} ${on && S.sel === id ? 'sel' : ''} ${on ? '' : 'lock'}" id="slot-${id}" data-act="slot" data-v="${id}" ${style ? `style="${style}"` : ''} aria-label="格子 ${id}">${content}</button>`;
+}
+function vPlay(){
+  const q = S.cur, st = S.step;
+  let work;
+  if (st === 'common'){
+    const g = gcd(gcd(q.oa, q.ob), q.oc);
+    const vals = g > 1 ? [1, g, -g, -1] : [1, -1];
+    work = `<div class="choices">${vals.map(v => `<button class="opt" data-act="common" data-v="${v}">${v === 1 ? '不用提' : '提出 ' + num(v)}</button>`).join('')}</div>`;
+  } else if (st === 'predict'){
+    const opts = q.kind === 'hint' ? ['pos', 'neg'] : ['pp', 'nn', 'mix'];
+    work = `<div class="choices">${opts.map(v => `<button class="opt" data-act="predict" data-v="${v}">${PRED[v]}</button>`).join('')}</div>`;
+  } else if (st === 'done'){
+    work = `<div class="final"><div class="txt" id="final">${q.kind === 'hint' ? hintDone(q) : doneText(q)}</div><button class="btn sun" data-act="next">${S.qi + 1 >= S.qs.length ? '完成這關' : '下一題'} ▶</button></div>`;
+  } else {
+    work = `<div class="work">${q.kind === 'hint' ? workHint(q) : workCross(q)}</div>${sidePad()}`;
+  }
+  stage.innerHTML = hud() + `<div class="play"><div class="zone">${work}</div>${guideHtml()}</div>`;
+}
+function workCross(q){
+  const st = S.step, a1 = q.a === 1;
+  const lv = id => a1 ? 'x' : S.slots[id] === undefined ? '□x' : S.slots[id] === '-' ? MINUS + 'x' : (val(id) === 1 ? '' : dispV(id)) + 'x';
+  const rv = id => { const v = S.slots[id]; if (v === undefined) return '□'; if (v === '-') return MINUS; const n = parseInt(v, 10); return signedShort(n); };
+  const lines = st === 'cross' || st === 'sum';
+  const v = st === 'direct' ? null : pqrs();
+  let prods = '';
+  if (!a1 && lines) prods = `<div class="cprod" style="top:0"><span>左下 × 右上：${par(v.r)} × ${par(v.q)} =</span>${slotEl('c1', dispV('c1') || '□', 'minislot')}</div>
+    <div class="cprod" style="top:198px"><span>左上 × 右下：${par(v.p)} × ${par(v.s)} =</span>${slotEl('c2', dispV('c2') || '□', 'minislot')}</div>`;
+  let under = '';
+  if (st === 'direct') under = `<div class="under" style="font-size:24px">${a1 ? '上下兩格相乘要得 ' + num(q.c) : '左邊上下相乘要得 ' + q.a + '，右邊上下相乘要得 ' + num(q.c)}</div>`;
+  if (st === 'sum') under = `<div class="under"><span>${a1 ? par(v.q) + ' + ' + par(v.s) : par(val('c1')) + ' + ' + par(val('c2'))} =</span>${slotEl('sum', dispV('sum') || '□')}</div>`;
+  if (st === 'factor'){
+    const f = (pid, qid) => `<span>(</span>${a1 ? '' : slotEl(pid, dispV(pid) || '□')}<span>x</span>${slotEl(qid, S.slots[qid] === undefined ? '□' : rv(qid))}<span>)</span>`;
+    under = `<div class="under">${fmtK(q.k) ? `<span>${fmtK(q.k)}</span>` : ''}${f('f1p', 'f1q')}${f('f2p', 'f2q')}</div>`;
+  }
+  return `<div class="crossbox">
+    ${lines ? `<svg width="444" height="286" aria-hidden="true"><line x1="124" y1="44" x2="320" y2="242" stroke="#E11D74" stroke-width="6"/><line x1="124" y1="242" x2="320" y2="44" stroke="#E11D74" stroke-width="6"/></svg>` : ''}
+    ${slotEl('p', lv('p'), '', 'left:0;top:0')}${slotEl('q', rv('q'), '', 'left:320px;top:0')}${slotEl('r', lv('r'), '', 'left:0;top:198px')}${slotEl('s', rv('s'), '', 'left:320px;top:198px')}${prods}
+  </div>${under}`;
+}
+function signedShort(n){ return n < 0 ? MINUS + Math.abs(n) : '+' + n; }
+function workHint(q){
+  const a = slotEl('a', dispV('a') || 'a'), b = slotEl('b', dispV('b') || 'b');
+  const A = `<span>(</span>${a}<span>x ${signed(q.q)})</span>`, B = `<span>(${q.r}x +</span>${b}<span>)</span>`;
+  let under = '';
+  if (S.step === 'hsum') under = `<div class="under"><span>展開後，x 的係數 =</span>${slotEl('sum', dispV('sum') || '□')}</div>`;
+  if (S.step === 'hab') under = `<div class="under"><span>a + b =</span>${slotEl('ab', dispV('ab') || '□')}</div>`;
+  return `<div class="eqline"><span>=</span>${q.swap ? B + A : A + B}</div>${under}`;
+}
+function sidePad(){
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'neg', '0', 'back'];
+  const label = k => k === 'neg' ? '±' : k === 'back' ? '⌫' : k;
+  const canHint = ['direct', 'hA', 'hB'].includes(S.step);
+  return `<div class="side"><div class="keys" id="pad">${keys.map(k => `<button class="key" data-act="key" data-v="${k}" aria-label="${k === 'neg' ? '正負號' : k === 'back' ? '刪除' : k}">${label(k)}</button>`).join('')}</div>
+    <div class="row3">${canHint ? `<button class="btn sun" data-act="hint" ${S.showHint ? 'style="opacity:.45"' : ''}>${S.showHint ? '已看提示' : '提示<br>（扣星）'}</button>` : ''}${activeIds().length > 1 ? '<button class="btn alt" data-act="nextslot">下一格</button>' : ''}<button class="btn" data-act="confirm">確認</button></div></div>`;
+}
+const PRED = { pp: '兩個都是正數', nn: '兩個都是負數', mix: '一正一負', pos: 'b 是正數', neg: 'b 是負數' };
+function promptText(){
+  const q = S.cur;
+  switch (S.step){
+    case 'common': return '這題要先提公因式嗎？';
+    case 'predict': return q.kind === 'hint' ? '先預測：未知數 b 會是？預測不扣愛心。' : '先預測：兩個括號裡的常數項，會是？預測不扣愛心。';
+    case 'direct': return q.a === 1 ? '哪兩個數相乘等於 ' + num(q.c) + '？把它們填進右邊兩格，正負號也要自己決定。' : '自己拆：x² 的係數 ' + q.a + ' 填進左邊兩格，常數項 ' + num(q.c) + ' 填進右邊兩格。';
+    case 'cross': return '沿著線交叉相乘，算出兩個結果，填進右邊的格子。';
+    case 'sum': return q.a === 1 ? '這兩個數相加是多少？和 x 的係數比一比。' : '把兩個結果相加，和 x 的係數比一比。';
+    case 'factor': return '每一橫排就是一個括號，把算式寫成兩個括號相乘。';
+    case 'hA': return '先看 x² 的係數：a × ' + q.r + ' = ' + q.A + '，a 是多少？';
+    case 'hB': return '再看常數項：' + num(q.q) + ' × b = ' + num(q.C) + '，b 是多少？';
+    case 'hsum': return '自己驗算：把兩個括號展開，x 的係數是多少？和題目比一比。';
+    case 'hab': return '最後，a + b 是多少？';
+  }
+  return '';
+}
+function guideHtml(){
+  const f = S.fb;
+  if (S.step === 'done'){
+    const good = S.predicted === S.cur.answerSign;
+    return `<div class="guide ok" id="fb" role="status"><b>✓ 完全正確！</b><br><span class="small">你的預測：${PRED[S.predicted]}　${good ? '✓ 和結果相同' : '✗ 和結果不同，比一比哪裡不一樣'}</span></div>`;
+  }
+  if (f) return `<div class="guide ${f.ok ? 'ok' : f.soft ? '' : 'no'}" id="fb" role="status"><b>${esc(f.title)}</b>　${esc(f.msg)}${f.ok ? `<div class="hintline">${esc(promptText())}</div>` : ''}${S.showHint && !f.ok ? `<div class="hintline" id="hintbox">提示：${esc(hintBody())}</div>` : ''}</div>`;
+  return `<div class="guide" id="guide" role="status">${esc(promptText())}${S.showHint ? `<div class="hintline" id="hintbox">提示：${esc(hintBody())}</div>` : ''}</div>`;
+}
+function hintDone(q){ const a = val('a'), b = val('b'); return fmtPoly(q.A, q.B, q.C) + '<br>= ' + (q.swap ? fmtFac(q.r, b) + fmtFac(a, q.q) : fmtFac(a, q.q) + fmtFac(q.r, b)) + '<br>a = ' + num(a) + '，b = ' + num(b) + '，a + b = ' + num(a + b); }
+function doneText(q){ const f = S.final; return fmtPoly(q.oa, q.ob, q.oc) + '<br>= ' + fmtK(q.k) + fmtFac(f[0], f[1]) + fmtFac(f[2], f[3]); }
+function vFail(){
+  clearInterval(S.timerId);
+  stage.innerHTML = bar(LEVELS[S.level].name) + `<div class="center" style="height:644px"><h1>${esc(S.failReason || '挑戰失敗')}</h1>
+    <div class="sub">這關換一組新題目再試一次。</div><button class="btn sun" data-act="retry" style="min-width:300px">再試一次</button>
+    <button class="btn alt" data-act="tomap">回關卡地圖</button></div>`;
+}
+function vReflect(){
+  const r = REFLECT[S.level];
+  stage.innerHTML = bar(LEVELS[S.level].name + '　過關！') + `<div class="center" style="height:644px"><h2>${r.q}</h2>
+    <div class="opts" style="width:880px">${r.opts.map((o, i) => `<button class="opt" data-act="reflect" data-v="${i}">${o}</button>`).join('')}</div>
+    <div class="err" id="reflectFb" role="status">${esc(S.reflectFb)}</div></div>`;
+}
+function vClear(){
+  const isLast = S.level === 7;
+  const st = S.lastStars || 1;
+  const after = S.reflectAfter; S.reflectAfter = '';
+  let total = 0; for (let i = 1; i <= 7; i++) total += S.prog.stars['L' + i] || 0;
+  stage.innerHTML = bar(LEVELS[S.level].name + '　過關！') + `<div class="center" style="height:644px">
+    <h1>${isLast ? '魔王被打倒了！' : '過關！'}</h1>
+    <div style="font-size:64px;line-height:1">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</div>
+    ${after ? `<div class="panel" style="font-size:25px;font-weight:700;max-width:940px" id="afterCard">${esc(after)}</div>` : ''}
+    ${isLast ? `<div class="sub">總星數：${total} / 21</div>` : ''}
+    <div style="display:flex;gap:14px"><button class="btn alt" data-act="tomap">回關卡地圖</button>${!isLast ? `<button class="btn sun" data-act="level" data-v="${S.level + 1}">下一關 ▶</button>` : ''}</div>
+  </div>`;
+}
+
+/* ---------- 教師密碼 ---------- */
+function teacherUnlocked(){ try { return sessionStorage.getItem('fcq2:teacherOk') === TEACHER_HASH; } catch (e) { return !!S.teacherOk; } }
+function openTeacher(){
+  if (teacherUnlocked() || S.teacherOk){ S.screen = 'teacher'; vTeacher(); }
+  else { S.screen = 'gate'; S.gateErr = ''; vGate(); }
+}
+function vGate(){
+  stage.innerHTML = bar('教師登入', '', true) + `<div class="center" style="height:644px">
+    <h2>請輸入教師密碼</h2>
+    <div class="panel">
+      <div class="field">密碼<input id="tPw" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64"></div>
+      <div class="err" id="gateErr" role="alert">${esc(S.gateErr || '')}</div>
+      <div style="display:flex;gap:10px"><button class="btn alt" data-act="tologin" style="flex:1">返回</button><button class="btn" data-act="gate" style="flex:1">進入</button></div>
+    </div></div>`;
+  const i = document.getElementById('tPw'); if (i) i.focus();
+}
+async function checkTeacherPw(){
+  const i = document.getElementById('tPw'), err = document.getElementById('gateErr');
+  if (!i || !i.value){ if (err) err.textContent = '請輸入密碼。'; return; }
+  try {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', enc.encode(i.value), 'PBKDF2', false, ['deriveBits']);
+    const salt = new Uint8Array(TEACHER_SALT.match(/../g).map(x => parseInt(x, 16)));
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: TEACHER_ITER }, key, 256);
+    const hex = [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+    if (hex !== TEACHER_HASH){ i.value = ''; i.focus(); err.textContent = '密碼不正確，請再試一次。'; return; }
+    S.teacherOk = true;
+    try { sessionStorage.setItem('fcq2:teacherOk', TEACHER_HASH); } catch (e) {}
+    S.screen = 'teacher'; vTeacher();
+  } catch (e) { if (err) err.textContent = '這個瀏覽器無法驗證密碼，請改用網址開啟。'; }
+}
+
+/* ---------- 教師看板 ---------- */
+function vTeacher(){
+  const T = S.teacher;
+  const storedDb = T.db || S.db || store.get('fcq2:teacherDb', '');
+  const cls = T.cls || params.get('class') || '';
+  const link = storedDb && validClass(cls) && /^https?:/.test(location.protocol) ? location.origin + location.pathname + '?class=' + encodeURIComponent(cls) : '';
+  const monitoring = !!T.timer;
+  const setup = !monitoring || T.showCfg;
+  stage.innerHTML = bar('教師看板' + (monitoring ? '｜班級 ' + esc(T.cls) : ''), `<button class="btn alt" data-act="tologin" style="min-height:48px;font-size:18px;padding:2px 14px">回登入頁</button>`, true) + `<div class="teacher">
+    ${setup ? `<div class="trow"><span>資料庫網址</span><input id="tDb" value="${esc(storedDb)}" placeholder="https://xxx-default-rtdb.firebaseio.com"><span>班級</span><input id="tCls" style="flex:0 0 130px" value="${esc(cls)}" placeholder="801"><button class="btn" data-act="tstart">開始監看</button></div>` : ''}
+    <div class="mono" id="tLink">${link ? '學生連結：' + esc(link) : '輸入班級代碼並開始監看後，這裡會出現學生連結。'}</div>
+    <div class="trow" style="justify-content:space-between"><span id="tStatus">${esc(T.err || (monitoring ? '每 4 秒更新' : '尚未開始'))}</span><span style="display:flex;gap:8px">
+      ${monitoring ? `<button class="btn alt" data-act="tcfg">${T.showCfg ? '收起設定' : '更換班級'}</button>` : ''}<button class="btn alt" data-act="csvSum">匯出總表 CSV</button><button class="btn alt" data-act="csvAtt">匯出作答紀錄 CSV</button><button class="btn alt" data-act="tclear">${T.confirmClear ? '再按一次確認清除' : '清除本班資料'}</button></span></div>
+    <div class="kpis" id="tKpi"></div>
+    <div class="bars" id="tBars"></div>
+    <div class="board" id="tTable"></div></div>`;
+  renderTable();
+}
+function topMiscon(m){ const e = Object.entries(m || {}).sort((a, b) => b[1] - a[1]); return e.length ? (MISCON[e[0][0]] || e[0][0]) + ' ×' + e[0][1] : '—'; }
+function renderTable(){
+  const T = S.teacher, el = document.getElementById('tTable'); if (!el) return;
+  const rows = Object.values(T.rows || {}).filter(Boolean).sort((a, b) => Number(a.seat) - Number(b.seat));
+  const now = Date.now();
+  const nn = v => Number(v) || 0;
+  let right = 0, wrong = 0, cleared = 0, active = 0;
+  const sum = {};
+  rows.forEach(r => {
+    right += nn(r.correct); wrong += nn(r.wrong); cleared += nn(r.cleared);
+    if (now - nn(r.t) < 90000) active++;
+    Object.entries(r.miscon || {}).forEach(([k, v]) => sum[k] = (sum[k] || 0) + nn(v));
+  });
+  const top = Object.entries(sum).sort((a, b) => b[1] - a[1]);
+  const kpi = document.getElementById('tKpi');
+  if (kpi) kpi.innerHTML = [
+    ['作答中／登入', active + ' / ' + rows.length, ''],
+    ['全班答對率', right + wrong ? Math.round(right / (right + wrong) * 100) + '%' : '—', ''],
+    ['平均過關數', rows.length ? (cleared / rows.length).toFixed(1) + ' / 7' : '—', ''],
+    ['最常見迷思', top.length ? esc(MISCON[top[0][0]] || top[0][0]) : '尚無錯誤', 'txt']
+  ].map(k => `<div class="kpi"><span>${k[0]}</span><b class="${k[2]}">${k[1]}</b></div>`).join('');
+  const bars = document.getElementById('tBars');
+  if (bars) bars.innerHTML = top.length ? '<b>迷思排行：</b>' + top.slice(0, 5).map(([k, v]) => esc(MISCON[k] || k) + ' ' + v + ' 次').join('、') : '';
+  if (!rows.length){ el.innerHTML = '<div class="empty">還沒有學生資料</div>'; return; }
+  el.innerHTML = '<div class="cards">' + rows.map(r => {
+    const a = nn(r.correct), w = nn(r.wrong), c = Math.min(7, nn(r.cleared));
+    const ago = Math.max(0, Math.round((now - nn(r.t)) / 1000));
+    const idle = ago >= 90;
+    const alert = w >= 3 && a / (a + w) < 0.6;
+    const place = r.level ? (LEVELS[r.level] ? LEVELS[r.level].name : r.level) : '關卡地圖';
+    const prog = Array.from({ length: 7 }, (_, i) => `<i class="${i < c ? 'on' : ''}"></i>`).join('');
+    return `<div class="scard ${alert ? 'alert' : ''} ${idle ? 'idle' : ''}">
+      <div class="top"><span class="no">${esc(r.seat)}</span><span class="rate">${a + w ? Math.round(a / (a + w) * 100) + '%' : '—'}</span></div>
+      <div class="one">${esc(place)}｜過關 ${c} / 7</div>
+      <div class="prog" aria-hidden="true">${prog}</div>
+      <div class="one">對${a} 錯${w} 提示${nn(r.hints)} ★${nn(r.totalStars)}</div>
+      <div class="one">${alert ? '⚠ 需關注：' : ''}${esc(topMiscon(r.miscon))}</div>
+      <div class="one">${idle ? '○ ' : '● '}${ago < 60 ? ago + ' 秒前' : Math.round(ago / 60) + ' 分前'}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+async function teacherPoll(){
+  const T = S.teacher;
+  try {
+    const r = await fetch(T.db + '/factorGame/' + encodeURIComponent('v2-' + T.cls) + '/students.json');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    T.rows = (await r.json()) || {}; T.err = '';
+    const st = document.getElementById('tStatus'); if (st) st.textContent = '每 4 秒更新｜最後更新 ' + new Date().toLocaleTimeString('zh-TW');
+    renderTable();
+  } catch (e) {
+    T.err = '讀取失敗：請檢查網址、網路與資料庫規則。';
+    const st = document.getElementById('tStatus'); if (st) st.textContent = T.err;
+  }
+}
+function teacherStart(){
+  const T = S.teacher;
+  const db = validDb(document.getElementById('tDb').value), cls = document.getElementById('tCls').value.trim();
+  T.cls = cls;
+  if (!db){ T.err = '資料庫網址格式不對，應為 Firebase Realtime Database 網址。'; clearInterval(T.timer); T.timer = 0; vTeacher(); return; }
+  if (!validClass(cls)){ T.err = '請輸入班級代碼（英數字）。'; clearInterval(T.timer); T.timer = 0; vTeacher(); return; }
+  S.db = db; T.db = db; T.err = ''; store.set('fcq2:teacherDb', db); T.showCfg = false;
+  clearInterval(T.timer); T.timer = setInterval(teacherPoll, 4000);
+  vTeacher(); teacherPoll();
+}
+function downloadCsv(name, rows){
+  const csv = '﻿' + rows.map(r => r.map(c => '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function csvSummary(){
+  const rows = Object.values(S.teacher.rows || {}).filter(Boolean).sort((a, b) => a.seat - b.seat);
+  const head = ['座號', '過關數', '總星數', '第1關', '第2關', '第3關', '第4關', '第5關', '第6關', '魔王關', '答對', '答錯', '提示'].concat(Object.values(MISCON));
+  const keys = Object.keys(MISCON);
+  downloadCsv('因式分解闖關思考版_總表_' + S.teacher.cls + '.csv', [head].concat(rows.map(r => [r.seat, r.cleared, r.totalStars].concat([1,2,3,4,5,6,7].map(i => (r.stars || {})['L' + i] || 0), [r.correct, r.wrong, r.hints], keys.map(k => (r.miscon || {})[k] || 0)))));
+}
+async function csvAttempts(){
+  const T = S.teacher;
+  if (!T.db) return;
+  try {
+    const r = await fetch(T.db + '/factorGame/' + encodeURIComponent('v2-' + T.cls) + '/attempts.json');
+    if (!r.ok) throw new Error();
+    const data = (await r.json()) || {}, out = [['座號', '時間', '關卡', '類型', '題目', '作答', '正確', '迷思', '用提示']];
+    Object.values(data).forEach(group => Object.values(group || {}).forEach(a => out.push([a.seat, new Date(a.t).toLocaleString('zh-TW'), a.level, a.kind || '', a.q || '', a.ans || '', a.ok ? '是' : '否', MISCON[a.type] || '', a.hint ? '是' : ''])));
+    downloadCsv('因式分解闖關思考版_作答紀錄_' + T.cls + '.csv', out);
+  } catch (e) { T.err = '匯出失敗：讀不到資料。'; const st = document.getElementById('tStatus'); if (st) st.textContent = T.err; }
+}
+async function teacherClear(){
+  const T = S.teacher;
+  if (!T.db || !validClass(T.cls)) return;
+  if (!T.confirmClear){ T.confirmClear = true; vTeacher(); return; }
+  T.confirmClear = false;
+  try { await fetch(T.db + '/factorGame/' + encodeURIComponent('v2-' + T.cls) + '.json', { method: 'DELETE' }); T.rows = {}; } catch (e) {}
+  vTeacher();
+}
+
+/* ---------- 事件 ---------- */
+stage.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const v = b.dataset.v;
+  switch (b.dataset.act){
+    case 'login': login(); break;
+    case 'teacher': openTeacher(); break;
+    case 'gate': checkTeacherPw(); break;
+    case 'tologin': clearInterval(S.teacher.timer); S.teacher.timer = 0; go('login'); break;
+    case 'tstart': teacherStart(); break;
+    case 'tcfg': S.teacher.showCfg = !S.teacher.showCfg; vTeacher(); break;
+    case 'csvSum': csvSummary(); break;
+    case 'csvAtt': csvAttempts(); break;
+    case 'tclear': teacherClear(); break;
+    case 'logout': clearInterval(Sync.timer); S.cur = null; S.level = 0; go('login'); break;
+    case 'level': startLevel(+v); break;
+    case 'begin': beginPlay(); break;
+    case 'common': if (S.hearts > 0) chooseCommon(+v); break;
+    case 'predict': choosePredict(v); break;
+    case 'slot': if (activeIds().includes(v)){ S.sel = v; render(); } break;
+    case 'key': pressKey(v); break;
+    case 'nextslot': nextSlot(); break;
+    case 'hint': useHint(); break;
+    case 'confirm': confirmStep(); break;
+    case 'next': nextQ(); break;
+    case 'retry': startLevel(S.level); break;
+    case 'tomap': case 'leave': clearInterval(S.timerId); S.cur = null; S.level = 0; S.deadline = 0; Sync.push(); go('map'); break;
+    case 'reflect': chooseReflect(+v); break;
+  }
+});
+stage.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && S.screen === 'login' && e.target.tagName === 'INPUT') login();
+  if (e.key === 'Enter' && S.screen === 'gate' && e.target.id === 'tPw') checkTeacherPw();
+});
+/* 實體鍵盤也可輸入 */
+document.addEventListener('keydown', e => {
+  if (S.screen !== 'play' || !activeIds().length || e.target.tagName === 'INPUT') return;
+  if (/^[0-9]$/.test(e.key)) pressKey(e.key);
+  else if (e.key === '-') pressKey('neg');
+  else if (e.key === 'Backspace') pressKey('back');
+  else if (e.key === 'Tab'){ e.preventDefault(); nextSlot(); }
+  else if (e.key === 'Enter'){ e.preventDefault(); confirmStep(); }
+});
+function fit(){
+  const w = window.innerWidth, h = window.innerHeight, sc = Math.min(w / 1280, h / 720);
+  stage.style.transform = `translate(${(w - 1280 * sc) / 2}px,${(h - 720 * sc) / 2}px) scale(${sc})`;
+}
+window.addEventListener('resize', fit); fit();
+window.addEventListener('online', () => Sync.flush());
+if (params.get('teacher') === '1') openTeacher(); else render();
+</script>
+</body>
+</html>
